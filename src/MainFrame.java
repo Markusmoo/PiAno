@@ -1,3 +1,9 @@
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import org.jfugue.realtime.RealtimePlayer;
+import org.jfugue.theory.Note;
+
+import javax.sound.midi.MidiUnavailableException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -7,6 +13,12 @@ import java.awt.event.MouseListener;
  * Created by 300145948 on 24/04/2017.
  */
 public class MainFrame extends JFrame implements MouseListener{
+
+    boolean isPi = false;
+    public GpioController gpio;
+
+    public RealtimePlayer player;
+
 
     Rectangle[] whiteKeys = new Rectangle[7];
     Rectangle[] blackKeys = new Rectangle[5];
@@ -20,6 +32,18 @@ public class MainFrame extends JFrame implements MouseListener{
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(true);
         this.setForeground(Color.WHITE);
+
+        if(System.getProperty("os.name").toLowerCase().contains("linux")){
+            isPi = true;
+            gpio = GpioFactory.getInstance();
+        }else{
+            try{
+                player = new RealtimePlayer();
+            }catch(MidiUnavailableException e){
+                e.printStackTrace();
+            }
+        }
+
         this.setupKeys();
 
         this.setVisible(true);
@@ -58,12 +82,35 @@ public class MainFrame extends JFrame implements MouseListener{
         g.setColor(old);
     }
 
-    public void playWhiteNote(int n){
+    public void playNote(String note){
+        if(isPi){
+            //TODO
+        }else{
+            player.startNote(new Note(note));
+        }
+    }
 
+    public void playWhiteNote(int n){
+        switch (n){
+            case(0): playNote("c"); break;
+            case(1): playNote("d"); break;
+            case(2): playNote("e"); break;
+            case(3): playNote("f"); break;
+            case(4): playNote("g"); break;
+            case(5): playNote("e"); break;
+            default: playNote("c"); break;
+        }
     }
 
     public void playBlackNote(int n){
-
+        switch (n){
+            case(0): playNote("c#"); break;
+            case(1): playNote("d#"); break;
+            case(2): playNote("f#"); break;
+            case(3): playNote("g#"); break;
+            case(4): playNote("a#"); break;
+            default: playNote("c"); break;
+        }
     }
 
     @Override
@@ -71,11 +118,21 @@ public class MainFrame extends JFrame implements MouseListener{
 
     @Override
     public void mousePressed(MouseEvent e) {
+        int idx = 0;
         for(Rectangle key : blackKeys){
             if(key.contains(e.getX(), e.getY())){
-                //TODO I am here
+                playBlackNote(idx);
                 return;
             }
+            idx++;
+        }
+        idx = 0;
+        for(Rectangle key : whiteKeys){
+            if(key.contains(e.getX(), e.getY())){
+                playWhiteNote(idx);
+                return;
+            }
+            idx++;
         }
     }
 
